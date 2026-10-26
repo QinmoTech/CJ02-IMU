@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CJ02-IMU · 姿态与振动工具</title>
 <link rel="stylesheet" href="vibration.css">
+<link rel="stylesheet" href="position.css">
 <style>
   :root{
     --bg:#f4f6f9;
@@ -165,6 +166,7 @@
     <nav class="view-nav" aria-label="功能页面">
       <button id="attitudeTab" class="active" aria-pressed="true">姿态监控</button>
       <button id="vibrationTab" aria-pressed="false">振动测试</button>
+      <button id="positionTab" aria-pressed="false">位置估计</button>
     </nav>
     <div class="conn">
       <span class="pill" id="status"><i class="ind"></i><span id="statusTxt">未连接</span></span>
@@ -237,6 +239,13 @@
     </div>
   </div>
 
+  <div id="positionView" class="page-view" hidden>
+    <div class="view-intro">
+      <h1>位置估计实验室</h1>
+      <p>直接使用单片机输出的 ESKF 姿态，将加速度转换到世界坐标系，并在浏览器内进行短时相对位置估计。</p>
+    </div>
+  </div>
+
   <section class="card logcard">
     <div class="card-h"><h2>日志</h2><button id="logToggle">展开 ▾</button></div>
     <div class="log" id="log" hidden></div>
@@ -267,8 +276,8 @@
 "use strict";
 const els = {
   connectBtn:document.getElementById('connectBtn'),
-  attitudeTab:document.getElementById('attitudeTab'), vibrationTab:document.getElementById('vibrationTab'),
-  attitudeView:document.getElementById('attitudeView'), vibrationView:document.getElementById('vibrationView'),
+  attitudeTab:document.getElementById('attitudeTab'), vibrationTab:document.getElementById('vibrationTab'), positionTab:document.getElementById('positionTab'),
+  attitudeView:document.getElementById('attitudeView'), vibrationView:document.getElementById('vibrationView'), positionView:document.getElementById('positionView'),
   status:document.getElementById('status'),
   statusTxt:document.getElementById('statusTxt'),
   baudRate:document.getElementById('baudRate'),
@@ -310,11 +319,13 @@ const C={roll:"#0891b2",pitch:"#2563eb",yaw:"#e11d48"};
 
 function showView(name){
   const vibration=name==='vibration';
-  els.attitudeView.hidden=vibration; els.vibrationView.hidden=!vibration;
-  els.attitudeTab.classList.toggle('active',!vibration); els.vibrationTab.classList.toggle('active',vibration);
-  els.attitudeTab.setAttribute('aria-pressed',String(!vibration));
+  const position=name==='position',attitude=!vibration&&!position;
+  els.attitudeView.hidden=!attitude; els.vibrationView.hidden=!vibration; els.positionView.hidden=!position;
+  els.attitudeTab.classList.toggle('active',attitude); els.vibrationTab.classList.toggle('active',vibration); els.positionTab.classList.toggle('active',position);
+  els.attitudeTab.setAttribute('aria-pressed',String(attitude));
   els.vibrationTab.setAttribute('aria-pressed',String(vibration));
-  history.replaceState(null,'',vibration?'#vibration':'#attitude');
+  els.positionTab.setAttribute('aria-pressed',String(position));
+  history.replaceState(null,'','#'+name);
 }
 
 function log(m,t='info'){
@@ -417,6 +428,7 @@ function process(data){
           if(h.t.length>M){h.t.shift();h.r.shift();h.p.shift();h.y.shift();}
         }
         state.frameTimes.push(performance.now());
+        if(window.positionAddSample) window.positionAddSample(state.latestRaw,state.latest);
         state.buffer=b.slice(frameLen);   /* good: advance past frame */
       }else{
         state.bad++;
@@ -713,6 +725,7 @@ function schedule(){ if(rafId==null) rafId=requestAnimationFrame(render); }
 els.connectBtn.addEventListener('click',connect);
 els.attitudeTab.addEventListener('click',()=>showView('attitude'));
 els.vibrationTab.addEventListener('click',()=>showView('vibration'));
+els.positionTab.addEventListener('click',()=>showView('position'));
 els.rangeBtn.addEventListener('click',()=>{ state.rangeIdx=(state.rangeIdx+1)%RANGES.length; els.rangeLbl.textContent='量程 '+RANGE_NAMES[state.rangeIdx]; });
 els.legend.querySelectorAll('.leg').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.k;state.vis[k]=!state.vis[k];el.classList.toggle('off',!state.vis[k]);}));
 els.logToggle.addEventListener('click',()=>{const h=els.log.hasAttribute('hidden');if(h){els.log.removeAttribute('hidden');els.logToggle.textContent='收起 ▴';}else{els.log.setAttribute('hidden','');els.logToggle.textContent='展开 ▾';}});
@@ -728,10 +741,12 @@ els.cfgReset.addEventListener('click',()=>{resetConfig();});
 els.cfgRefresh.addEventListener('click',()=>{getConfig();});
 function resize(){ dpr=Math.max(1,window.devicePixelRatio||1); for(const cv of[els.scene,els.chart]){const r=cv.getBoundingClientRect();const w=Math.max(1,Math.floor(r.width)),h=Math.max(1,Math.floor(r.height));cv.width=w*dpr;cv.height=h*dpr;cv._w=w;cv._h=h;} }
 window.addEventListener('resize',resize);
-showView(location.hash==='#vibration'?'vibration':'attitude');
+showView(location.hash==='#vibration'?'vibration':location.hash==='#position'?'position':'attitude');
 if(!navigator.serial){ log('此浏览器不支持 Web Serial API，请使用 Chrome / Edge','error'); els.connectBtn.disabled=true; } else { log('Web Serial API 可用，点击“连接串口”选择 COM 口','info'); }
 resize(); drawScene(0,0,0); drawChart(); updateFreqGauge(0); schedule();
 </script>
 <script src="vibration.js"></script>
+<script src="position-estimator.js"></script>
+<script src="position.js"></script>
 </body>
 </html>
