@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://creavisiontech.github.io/CJ02-IMU/"><img src="https://img.shields.io/badge/Dashboard-GitHub%20Pages-blue" alt="Web Dashboard"></a>
+  <a href="https://qinmotech.github.io/CJ02-IMU/"><img src="https://img.shields.io/badge/Dashboard-GitHub%20Pages-blue" alt="Web Dashboard"></a>
   <a href="docs/PROTOCOL.md"><img src="https://img.shields.io/badge/Protocol-v1.0-green" alt="Protocol v1.0"></a>
 </p>
 
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="https://creavisiontech.github.io/CJ02-IMU/"><strong>在线 Dashboard</strong></a>
+  <a href="https://qinmotech.github.io/CJ02-IMU/"><strong>在线 Dashboard</strong></a>
   &nbsp; · &nbsp;
   <a href="#快速上手">快速上手</a>
   &nbsp; · &nbsp;
@@ -55,7 +55,7 @@ CJ02-IMU 是一款高性能迷你六轴惯性测量单元（IMU），内置 ESKF
 
 ### 在线工具
 
-- **[Web Dashboard](https://creavisiontech.github.io/CJ02-IMU/)** — 浏览器直接连接串口，实时查看 3D 姿态、原始数据和曲线，可在线修改 ESKF 参数，并通过交互式向导完成电机关闭基线、实际工况、振动频谱、滤波方案离线重放和上机复测。
+- **[Web Dashboard](https://qinmotech.github.io/CJ02-IMU/)** — 浏览器直接连接串口，实时查看 3D 姿态、原始数据和曲线，可在线修改 ESKF 参数，并通过交互式向导完成电机关闭基线、实际工况、振动频谱、滤波方案离线重放和上机复测。
 
 振动分析在浏览器本地完成，采集内容不会上传。每段采集至少 3 秒，建议基线采集 5–10 秒；工况采集应覆盖实际转速、负载和运动范围。分析器使用 1 秒 Hann 窗和 50% 重叠，在 15–700 Hz 范围内比较工况与基线，输出加速度计/陀螺仪陷波中心、Q 值、低通截止频率及滤波前后高频 RMS。生成的 JSON 报告可以直接从页面下载。
 
@@ -96,7 +96,7 @@ cmake .. && make
 
 ### 方式三：Web Dashboard（零安装）
 
-1. 用 Chrome 或 Edge 打开 [在线 Dashboard](https://creavisiontech.github.io/CJ02-IMU/)
+1. 用 Chrome 或 Edge 打开 [在线 Dashboard](https://qinmotech.github.io/CJ02-IMU/)
 2. 点击「连接串口」选择对应 COM 口
 3. 即可看到实时 3D 姿态、原始数据、曲线图
 
@@ -166,7 +166,11 @@ CJ02-IMU/
 ├── dashboard/
 │   ├── index.html            # Web Dashboard（GitHub Pages 部署）
 │   ├── vibration.js          # 浏览器端振动采集、FFT、滤波重放和复测
-│   └── vibration.css         # 振动分析向导样式
+│   ├── vibration.css         # 振动分析向导样式
+│   ├── position-estimator.js # 浏览器端位置估计（运动检测/ZUPT/漂移回修）
+│   ├── position.js           # 位置视图渲染与轨迹绘制
+│   ├── position.css          # 位置视图样式
+│   └── test_*.js             # Node 冒烟测试（随 Pages 发布，页面不引用）
 └── .github/
     └── workflows/
         └── pages.yml         # GitHub Pages 自动部署
